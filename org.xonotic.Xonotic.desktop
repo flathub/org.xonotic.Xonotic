@@ -6,4 +6,4 @@ Icon=org.xonotic.Xonotic
 Exec=xonotic-sdl
 Terminal=false
 Type=Application
-Categories=Game;ActionGame;
+Categories=Game;ActionGame;Shooter;
