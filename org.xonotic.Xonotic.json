@@ -42,7 +42,10 @@
                 },
                 {
                     "type": "patch",
-                    "path": "darkplaces-align-structs-not-typedefs.patch"
+                    "path": "darkplaces-align-structs-not-typedefs.patch",
+                    "only-arches": [
+                        "x86_64"
+                    ]
                 },
                 {
                     "type": "file",
