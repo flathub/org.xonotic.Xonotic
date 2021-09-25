@@ -41,6 +41,10 @@
                     "path": "xonotic.patch"
                 },
                 {
+                    "type": "patch",
+                    "path": "darkplaces-align-structs-not-typedefs.patch"
+                },
+                {
                     "type": "file",
                     "path": "org.xonotic.Xonotic.desktop"
                 },
