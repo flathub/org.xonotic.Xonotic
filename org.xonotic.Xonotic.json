@@ -7,8 +7,8 @@
         "--device=all",
         "--share=ipc",
         "--share=network",
-        "--socket=fallback-x11",
-        "--socket=wayland",
+        /* Issues with Wayland, #9 */
+        "--socket=x11",
         "--socket=pulseaudio",
         /* Xonotic does not respect XDG base directories */
         "--persist=.xonotic"
