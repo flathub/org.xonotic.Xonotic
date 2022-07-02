@@ -7,7 +7,7 @@
         "--device=all",
         "--share=ipc",
         "--share=network",
-        /* Issues with Wayland, #9 */
+        /* Text input is broken on Wayland */
         "--socket=x11",
         "--socket=pulseaudio",
         /* Xonotic does not respect XDG base directories */
