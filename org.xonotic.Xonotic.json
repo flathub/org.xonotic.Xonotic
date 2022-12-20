@@ -4,7 +4,7 @@
     "runtime-version": "22.08",
     "sdk": "org.freedesktop.Sdk",
     "finish-args": [
-        "socket=wayland",
+        "--socket=wayland",
         "--socket=fallback-x11",
         "--share=ipc",
         "--socket=pulseaudio",
