@@ -81,6 +81,7 @@ index 50d829e..85fbe91 100644
 +SUFFIX ?= $(shell if [ -d .git ]; then echo git; elif [ x"$(BINARY)" = x"yes" ]; then echo zip-binary; else echo zip-source; fi)
 +RIJNDAELDETECT_CONFIGURE ?= $(shell if ! [ -f source/d0_blind_id/d0_rijndael.c ]; then echo --disable-rijndael; fi)
 +RIJNDAELDETECT_MAKE_DP ?= $(shell if [ -f source/d0_blind_id/d0_rijndael.c ]; then echo DP_CRYPTO_RIJNDAEL_STATIC_LIBDIR=$(CURDIR)/source/d0_blind_id/.libs; fi)
++export DP_LINK_CRYPTO=shared
 +
 +
 +.PHONY: all
@@ -96,13 +97,13 @@ index 50d829e..85fbe91 100644
 +
 +.PHONY: all-zip-source
 +all-zip-source:
-+	( cd source/d0_blind_id && ./configure --enable-static --disable-shared $(RIJNDAELDETECT_CONFIGURE) )
-+	$(MAKE) -C source/d0_blind_id
++	( cd source/d0_blind_id && ./configure --prefix $(PREFIX) --enable-shared --enable-static $(RIJNDAELDETECT_CONFIGURE) )
++	$(MAKE) -C source/d0_blind_id all install
 +	$(MAKE) -C source/gmqcc
 +	$(MAKE) -C source/qcsrc QCC=$(CURDIR)/source/gmqcc/gmqcc
-+	$(MAKE) -C source/darkplaces sv-release DP_CRYPTO_STATIC_LIBDIR=$(CURDIR)/source/d0_blind_id/.libs
-+	$(MAKE) -C source/darkplaces cl-release DP_CRYPTO_STATIC_LIBDIR=$(CURDIR)/source/d0_blind_id/.libs
-+	$(MAKE) -C source/darkplaces sdl-release DP_CRYPTO_STATIC_LIBDIR=$(CURDIR)/source/d0_blind_id/.libs
++	$(MAKE) -C source/darkplaces sv-release LIB_CRYPTO="-lgmp -L$(PREFIX)/lib -ld0_blind_id"
++	$(MAKE) -C source/darkplaces cl-release LIB_CRYPTO="-lgmp -L$(PREFIX)/lib -ld0_blind_id"
++	$(MAKE) -C source/darkplaces sdl-release LIB_CRYPTO="-lgmp -L$(PREFIX)/lib -ld0_blind_id"
  
 -.PHONY: clean
 -clean: clean-sources

@@ -53,7 +53,8 @@
                 "make all-zip-source install-data-zip-source install-engine-zip-source install-links install-doc",
                 "install -Dm644 misc/logos/xonotic_icon.svg /app/share/icons/hicolor/scalable/apps/org.xonotic.Xonotic.svg",
                 "install -Dm644 org.xonotic.Xonotic.desktop /app/share/applications/org.xonotic.Xonotic.desktop",
-                "install -Dm644 org.xonotic.Xonotic.appdata.xml /app/share/appdata/org.xonotic.Xonotic.appdata.xml"
+                "install -Dm644 org.xonotic.Xonotic.appdata.xml /app/share/appdata/org.xonotic.Xonotic.appdata.xml",
+                "install -Dm644 key_0.d0pk /app/lib/xonotic/key_0.d0pk"
             ]
         }
     ]
