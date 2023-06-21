@@ -1,15 +1,15 @@
-diff --git a/Makefile.old b/Makefile
-index 50d829e..85fbe91 100644
---- a/Makefile.old
+diff --git a/Makefile b/Makefile
+index 2300f38..d42047e 100644
+--- a/Makefile
 +++ b/Makefile
-@@ -1,97 +1,132 @@
+@@ -1,97 +1,133 @@
 -DPSRC = source/darkplaces
 -D0SRC = source/d0_blind_id
 -CLIENT = xonotic-local-sdl
 -SERVER = xonotic-local-dedicated
 -
 -# CC and MAKEFLAGS are always set so ?= has no effect, therefore
--# use CFLAGS to set default optimisations and support user override
+-# we use CFLAGS to set default optimisations which users may override
 -CFLAGS ?= -pipe -march=native -mtune=native -flto=auto
 -# user can override this with make -j
 -MAKEFLAGS := -j$(shell nproc)
@@ -56,7 +56,7 @@ index 50d829e..85fbe91 100644
 -	@echo   "  make both"
 -	@echo
 -
--GIT := $(shell [ -d .git ] && printf "\e[1;31mTo compile from git, please read https://gitlab.com/xonotic/xonotic/-/wikis/Repository_Access\e[m")
+-GIT := $(shell [ -d .git ] && printf "\e[1;31mThis Makefile only supports stable releases and autobuilds, whereas you are using a git repository.  To compile from git, please read https://gitlab.com/xonotic/xonotic/-/wikis/Repository_Access\e[m")
 -ifdef GIT
 -  $(error $(GIT))
 -endif
