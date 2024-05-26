@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Copyright 2018 Daniel Rusek <mail@asciiwolf.com> -->
-<component type="desktop">
-  <id>org.xonotic.Xonotic.desktop</id>
+<component type="desktop-application">
+  <id>org.xonotic.Xonotic</id>
   <project_license>GPL-3.0</project_license>
   <metadata_license>CC0-1.0</metadata_license>
   <provides>
     <id>xonotic.desktop</id>
   </provides>
+  <launchable type="desktop-id">org.xonotic.Xonotic.desktop</launchable>
   <name>Xonotic</name>
+  <developer_name>Team Xonotic</developer_name>
   <summary>Multiplayer, deathmatch oriented first person shooter</summary>
   <summary xml:lang="de">Deathmatch- und Mehrspieler-orientierter Ego-Shooter</summary>
   <summary xml:lang="fr">Jeu de tir à la première personne multijoueur</summary>
@@ -70,11 +72,11 @@
   </description>
   <url type="homepage">https://xonotic.org</url>
   <screenshots>
-    <screenshot type="default">https://xonotic.org/m/uploads/2012/07/frontpage_005.jpg</screenshot>
-    <screenshot>https://xonotic.org/m/uploads/2012/07/frontpage_006.jpg</screenshot>
-    <screenshot>https://xonotic.org/m/uploads/2012/07/frontpage_007.jpg</screenshot>
-    <screenshot>https://xonotic.org/m/uploads/2012/07/frontpage_008.jpg</screenshot>
-    <screenshot>https://xonotic.org/m/uploads/2012/07/frontpage_003.jpg</screenshot>
+    <screenshot type="default"><image>https://xonotic.org/m/uploads/2012/07/frontpage_005.jpg</image></screenshot>
+    <screenshot><image>https://xonotic.org/m/uploads/2012/07/frontpage_006.jpg</image></screenshot>
+    <screenshot><image>https://xonotic.org/m/uploads/2012/07/frontpage_007.jpg</image></screenshot>
+    <screenshot><image>https://xonotic.org/m/uploads/2012/07/frontpage_008.jpg</image></screenshot>
+    <screenshot><image>https://xonotic.org/m/uploads/2012/07/frontpage_003.jpg</image></screenshot>
   </screenshots>
   <update_contact>mail@asciiwolf.com</update_contact>
   <content_rating type="oars-1.1">
