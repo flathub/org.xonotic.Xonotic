@@ -1,7 +1,7 @@
 {
     "app-id": "org.xonotic.Xonotic",
     "runtime": "org.freedesktop.Platform",
-    "runtime-version": "23.08",
+    "runtime-version": "24.08",
     "sdk": "org.freedesktop.Sdk",
     "finish-args": [
         "--device=all",
