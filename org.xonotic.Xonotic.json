@@ -14,47 +14,42 @@
         "--persist=.xonotic"
     ],
     "command": "xonotic-sdl",
-    "cleanup": [
-        "/include",
-        "/lib/pkgconfig",
-        "/share/aclocal",
-        "/share/man",
-        "*.la", "*.a"
-    ],
     "modules": [
+        /* See: https://gitlab.com/xonotic/xonotic/-/wikis/Compiling */
         {
             "name": "xonotic",
             "buildsystem": "simple",
             "build-options": {
                 "env": {
-                    "PREFIX": "/app"
+                    "prefix": "/app", /* this and several other GNU make standard directory variables are supported */
+                    "BASEDIR": "/app/share/xonotic", /* eliminates $PATH symlinks by telling engine where data/*.pk3 is */
+                    "FILENAME_DESKTOP_CLIENT": "org.xonotic.Xonotic", /* flathub requires desktop and icon files be renamed */
+                    "FILENAME_ICON_CLIENT": "org.xonotic.Xonotic", /* no file extensions here! */
+                    "CFLAGS": "", /* disables -march=native (all other optimisations enabled by default as in upstream builds) */
+                    "RANLIB": "gcc-ranlib", /* fixes LTO build on Freedesktop SDK 24.08 ?not needed on debian, gentoo, etc? */
+                    /* legacy engine requires following kludges to build with current Makefile, RELEASE TODO: remove for 0.9 */
+                    "DP_LINK_CRYPTO": "foo",
+                    "CFLAGS_CRYPTO": "-DLINK_TO_CRYPTO",
+                    "LIB_CRYPTO": "-ld0_blind_id -lgmp",
+                    "DP_LINK_CRYPTO_RIJNDAEL": "shared"
                 }
             },
             "sources": [
                 {
                     "type": "archive",
                     "url": "https://dl.xonotic.org/xonotic-0.8.6.zip",
-                    "sha256": "50850f8d800e7499722f6ea61e478e96464a375494b5a24da93aa0598cbe964d"
+                    "sha512": "cb39879e96f19abb2877588c2d50c5d3e64dd68153bec3dd1bebedf4d765e506afa419c28381d7005aed664cb1a042571c132b5b319e4308cab67745d996c2a6"
                 },
+                /* RELEASE TODO: for 0.9 this patch should be removed as the updates will be in the zip, see MRs: */
+                /* https://gitlab.com/xonotic/xonotic/-/merge_requests/124 */
+                /* https://gitlab.com/xonotic/xonotic/-/merge_requests/125 */
                 {
                     "type": "patch",
-                    "path": "xonotic.patch"
-                },
-                {
-                    "type": "file",
-                    "path": "org.xonotic.Xonotic.desktop"
-                },
-                {
-                    "type": "file",
-                    "path": "org.xonotic.Xonotic.appdata.xml"
+                    "path": "xonotic2.patch"
                 }
             ],
             "build-commands": [
-                "make all-zip-source install-data-zip-source install-engine-zip-source install-links install-doc",
-                "install -Dm644 misc/logos/xonotic_icon.svg /app/share/icons/hicolor/scalable/apps/org.xonotic.Xonotic.svg",
-                "install -Dm644 org.xonotic.Xonotic.desktop /app/share/applications/org.xonotic.Xonotic.desktop",
-                "install -Dm644 org.xonotic.Xonotic.appdata.xml /app/share/appdata/org.xonotic.Xonotic.appdata.xml",
-                "install -Dm644 key_0.d0pk /app/lib/xonotic/key_0.d0pk"
+                "make all install"
             ]
         }
     ]
