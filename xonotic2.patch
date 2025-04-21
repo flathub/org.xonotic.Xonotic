@@ -1,0 +1,403 @@
+diff --git a/Makefile b/Makefile
+index 2300f38..e97e5e3 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,41 +1,33 @@
+ DPSRC = source/darkplaces
+ D0SRC = source/d0_blind_id
+-CLIENT = xonotic-local-sdl
+-SERVER = xonotic-local-dedicated
++CLIENTBIN ?= xonotic-sdl
++SERVERBIN ?= xonotic-dedicated
+ 
+ # CC and MAKEFLAGS are always set so ?= has no effect, therefore
+ # we use CFLAGS to set default optimisations which users may override
+-CFLAGS ?= -pipe -march=native -mtune=native -flto=auto
++CFLAGS ?= -march=native -mtune=native
++CFLAGS += -flto=auto
+ # user can override this with make -j
+ MAKEFLAGS := -j$(shell nproc)
+ # DP makefile overrides CFLAGS (exporting CFLAGS does work for d0_blind_id but so does this)
+ export CC += $(CFLAGS)
+ 
+-# d0_blind_id header location
+-export CC += -I$(PWD)/source/
+-# d0_blind_id static libs location
+-export CC += -L$(PWD)/$(D0SRC)/.libs/
+-# Player IDs: DP_LINK_CRYPTO needs to be set (else it defaults to "dlopen"),
+-# it should be set to "shared" but then LIB_CRYPTO gets overridden in DP makefile,
+-# and we need to set LIB_CRYPTO such that libgmp gets linked
+-export DP_LINK_CRYPTO=foo
+-export CFLAGS_CRYPTO=-DLINK_TO_CRYPTO
+-export LIB_CRYPTO=-ld0_blind_id -lgmp
+-# AES
+-export DP_LINK_CRYPTO_RIJNDAEL=shared
+-
+-
+ .PHONY: help
+ help:
+ 	@echo
+ 	@printf "     \e[1;33m===== Xonotic Makefile for stable and beta releases =====\e[m\n"
+ 	@echo
+-	@printf "The DarkPlaces Engine builds will be named \e[1m$(CLIENT) \e[mand \e[1m$(SERVER)\e[m\n"
+-	@printf "and will be preferred by \e[1mxonotic-linux-sdl.sh \e[mand \e[1mxonotic-linux-dedicated.sh \e[mscripts.\n"
++	@printf "The new executables will be named \e[1;32m$(CLIENTBIN) \e[mand \e[1;32m$(SERVERBIN)\e[m\n"
++	@printf "and will be preferred by the \e[1;32mxonotic-linux-sdl.sh \e[mand \e[1;32mxonotic-linux-dedicated.sh \e[mscripts\n"
++	@echo   "which are used to play with the SDL client or host a dedicated server (respectively)."
++	@echo
++	@echo   "Moving files outside of this directory isn't officially supported as it's"
++	@echo   "incompatible with the included updater and the working directory may be incorrect."
++	@printf "Instead the above \e[1;32mscripts\e[m may be called from elsewhere via symlinks, .desktop files, etc.\n"
+ 	@echo
+ 	@printf "More info is available at \e[1;36mhttps://gitlab.com/xonotic/xonotic/-/wikis/Compiling\e[m\n"
+ 	@echo
+-	@echo   "-O3 is already enabled for DarkPlaces Engine. Do not add any math flags!"
++	@echo   "-O3 and all optimisations for your CPU are enabled by default. Do not add any math flags!"
+ 	@echo
+ 	@echo   "MAKEFLAGS=$(MAKEFLAGS)"
+ 	@echo   "CFLAGS= $(CFLAGS)"
+@@ -44,11 +36,11 @@ help:
+ 	@echo   "  make clean                 Delete engine builds and build objects"
+ 	@echo
+ 	@echo   "  make update-stable         Update to the latest stable release via rsync"
+-	@echo   "  make update-beta           Update to the latest daily autobuild via rsync"
++	@echo   "  make update-beta           Update to the latest beta autobuild via rsync"
+ 	@echo
+-	@printf "  make server                Compile \e[1m$(SERVER)\e[m\n"
+-	@printf "  make client                Compile \e[1m$(CLIENT)\e[m\n"
+-	@echo   "  make both"
++	@printf "  make server                Compile \e[1;32m$(SERVERBIN)\e[m\n"
++	@printf "  make client                Compile \e[1;32m$(CLIENTBIN)\e[m\n"
++	@echo   "  make all                   Compile both client and server"
+ 	@echo
+ 
+ GIT := $(shell [ -d .git ] && printf "\e[1;31mThis Makefile only supports stable releases and autobuilds, whereas you are using a git repository.  To compile from git, please read https://gitlab.com/xonotic/xonotic/-/wikis/Repository_Access\e[m")
+@@ -56,16 +48,20 @@ ifdef GIT
+   $(error $(GIT))
+ endif
+ 
+-.EXTRA_PREREQS := $(findstring update-stable,$(MAKECMDGOALS)) $(findstring update-beta,$(MAKECMDGOALS))
++
++# If requested, these targets must always run first:
++.EXTRA_PREREQS := $(filter clean update-stable update-beta, $(MAKECMDGOALS))
+ 
+ .PHONY: clean-sources
+ clean-sources:
+ 	$(MAKE) -C $(DPSRC) clean
+-	$(MAKE) -C $(D0SRC) clean
++# autotools may not have created the Makefile yet so check first and don't fail
++	( [ -f $(D0SRC)/Makefile ] && $(MAKE) -C $(D0SRC) clean || true )
++clean-sources: .EXTRA_PREREQS =  # prevents circular dependency
+ 
+ .PHONY: clean
+ clean: clean-sources
+-	$(RM) $(CLIENT) $(SERVER)
++	$(RM) $(CLIENTBIN) $(SERVERBIN)
+ 
+ .PHONY: update-stable
+ update-stable:
+@@ -75,23 +71,141 @@ update-stable:
+ update-beta:
+ 	misc/tools/rsync-updater/update-to-autobuild.sh
+ 
+-$(D0SRC)/Makefile:
+-	( cd $(D0SRC) && ./autogen.sh && ./configure --enable-static --disable-shared )
+ 
+-.PHONY: d0_blind_id
+-d0_blind_id: $(D0SRC)/Makefile
++$(D0SRC)/.libs/libd0_blind_id.a $(D0SRC)/.libs/libd0_rijndael.a:
++	( cd $(D0SRC) && ./autogen.sh && ./configure --enable-static --disable-shared )
++	$(MAKE) -C $(D0SRC) clean  # ensures missing .a files are created FIXME WORKAROUND
+ 	$(MAKE) -C $(D0SRC)
+ 
++export DP_LINK_CRYPTO?=static
++export DP_LINK_CRYPTO_RIJNDAEL?=static
++# d0_blind_id/d0_blind_id.h and .a locations (respectively)
++D0INC=-I"$(PWD)/source/" -L"$(PWD)/$(D0SRC)/.libs/"
++
++.PHONY: all both
++all both: client server
++
+ .PHONY: server
+-server: d0_blind_id
+-	$(MAKE) -C $(DPSRC) sv-release
+-	cp -v $(DPSRC)/darkplaces-dedicated $(SERVER)
++server: $(SERVERBIN)
++$(DPSRC)/darkplaces-dedicated: $(D0SRC)/.libs/libd0_blind_id.a
++	CC='$(CC) $(D0INC)' $(MAKE) -C $(DPSRC) sv-release
++$(SERVERBIN): $(DPSRC)/darkplaces-dedicated
++	cp $(DPSRC)/darkplaces-dedicated $(SERVERBIN)
+ 
+ .PHONY: client
+-client: d0_blind_id
+-	$(MAKE) -C $(DPSRC) sdl-release
+-	cp -v $(DPSRC)/darkplaces-sdl $(CLIENT)
++client: $(CLIENTBIN)
++$(DPSRC)/darkplaces-sdl: $(D0SRC)/.libs/libd0_blind_id.a
++	CC='$(CC) $(D0INC)' $(MAKE) -C $(DPSRC) sdl-release
++$(CLIENTBIN): $(DPSRC)/darkplaces-sdl
++	cp $(DPSRC)/darkplaces-sdl $(CLIENTBIN)
++
++
++# GNU make standard directory variables for install targets
++DESTDIR ?=
++prefix ?= /usr/local
++exec_prefix ?= $(prefix)
++bindir ?= $(exec_prefix)/bin
++libdir ?= $(exec_prefix)/lib
++datarootdir ?= $(prefix)/share
++datadir ?= $(datarootdir)
++docdir ?= $(datarootdir)/doc/xonotic
++
++# $BASEDIR is where data/*.pk3 will be installed.
++# By default this will be located at runtime by installing the engine there and symlinking to it in $bindir.
++# If $BASEDIR (preferred) or $DP_FS_BASEDIR (compat synonym) was defined externally the engine will be installed to $bindir,
++# the value of $BASEDIR / $DP_FS_BASEDIR will be compiled into it, and no symlinks are needed.
++ifdef BASEDIR
++	export DP_FS_BASEDIR = $(BASEDIR)
++else
++	# don't put spaces after the commas, they end up in the path!
++	BASEDIR = $(if $(DP_FS_BASEDIR),$(DP_FS_BASEDIR),$(datadir)/xonotic)
++endif
+ 
+-.PHONY: both
+-both: client server
++INSTALL ?= install
++INSTALL_PROGRAM ?= $(INSTALL) -vD
++INSTALL_DATA ?= $(INSTALL) -vDm644
++
++.PHONY: install
++install: install-data install-engine install-desktop install-doc
++.PHONY: install-client
++install-client: install-data install-engine-client install-desktop-client install-doc-client
++.PHONY: install-server
++install-server: install-data install-engine-server install-desktop-server install-doc-server
++.PHONY: install-engine
++install-engine: install-engine-client install-engine-server
++.PHONY: install-desktop
++install-desktop: install-desktop-client install-desktop-server
++.PHONY: install-doc
++install-doc: install-doc-client install-doc-server
++
++.PHONY: install-help
++install-help:
++	@echo
++	@printf "     \e[1;33m===== Xonotic Makefile: install target list =====\e[m\n"
++	@echo
++	@printf "More info is available at \e[1;36mhttps://gitlab.com/xonotic/xonotic/-/wikis/Compiling\e[m\n"
++	@echo
++	@echo   "  install: install-data install-engine install-desktop install-doc"
++	@echo   "  install-client: install-data install-engine-client install-desktop-client install-doc-client"
++	@echo   "  install-server: install-data install-engine-server install-desktop-server install-doc-server"
++	@echo
++	@echo   "  install-data:                                                    data/*.pk3 VFS contents, pubkey"
++	@echo   "  install-engine: install-engine-client install-engine-server      Main binaries"
++	@echo   "  install-desktop: install-desktop-client install-desktop-server   desktop icon, metainfo"
++	@echo   "  install-doc: install-doc-client install-doc-server"
++
++.PHONY: install-data
++install-data:
++	$(RM) -rf $(DESTDIR)$(BASEDIR)/data
++	for p in data/*.pk3; do $(INSTALL_DATA) $$p $(DESTDIR)$(BASEDIR)/$$p || exit 1; done
++	$(INSTALL_DATA) key_0.d0pk $(DESTDIR)$(BASEDIR)/key_0.d0pk
++
++# TODO: when the .sh scripts are fully obsolete, make install-engine-* not PHONY (hint: declare the target inside the ifdef)
++.PHONY: install-engine-client
++install-engine-client: client
++ifdef DP_FS_BASEDIR # path for distro package builds that define $BASEDIR / $DP_FS_BASEDIR
++	$(INSTALL_PROGRAM) source/darkplaces/darkplaces-sdl $(DESTDIR)$(bindir)/xonotic-sdl
++else # end users aren't expected to `make install` but if they do this path makes their install functional
++	$(INSTALL_PROGRAM) source/darkplaces/darkplaces-sdl $(DESTDIR)$(BASEDIR)/xonotic-sdl
++	# install-links
++	$(INSTALL_PROGRAM) xonotic-linux-sdl.sh $(DESTDIR)$(BASEDIR)/xonotic-linux-sdl.sh
++	$(INSTALL) -d $(DESTDIR)$(bindir)
++	ln -snf $(BASEDIR)/xonotic-linux-sdl.sh $(DESTDIR)$(bindir)/xonotic-sdl
++endif
++
++.PHONY: install-engine-server
++install-engine-server: server
++ifdef DP_FS_BASEDIR # path for distro package builds that define $BASEDIR / $DP_FS_BASEDIR
++	$(INSTALL_PROGRAM) source/darkplaces/darkplaces-dedicated $(DESTDIR)$(bindir)/xonotic-dedicated
++else # end users aren't expected to `make install` but if they do this path makes their install functional
++	$(INSTALL_PROGRAM) source/darkplaces/darkplaces-dedicated $(DESTDIR)$(BASEDIR)/xonotic-dedicated
++	# install-links
++	$(INSTALL_PROGRAM) xonotic-linux-dedicated.sh $(DESTDIR)$(BASEDIR)/xonotic-linux-dedicated.sh
++	$(INSTALL) -d $(DESTDIR)$(bindir)
++	ln -snf $(BASEDIR)/xonotic-linux-dedicated.sh $(DESTDIR)$(bindir)/xonotic-dedicated
++endif
+ 
++# Flathub requires these file names to be changed, which requires editing files that reference them.
++# No file extensions in the values because desktop files omit them from Icon=
++FILENAME_ICON_CLIENT ?= xonotic
++FILENAME_DESKTOP_CLIENT ?= xonotic
++.PHONY: install-desktop-client
++install-desktop-client:
++	$(INSTALL_DATA) misc/logos/xonotic_icon.svg $(DESTDIR)$(datarootdir)/icons/hicolor/scalable/apps/$(FILENAME_ICON_CLIENT).svg
++	$(INSTALL_DATA) misc/logos/xonotic.desktop $(DESTDIR)$(datarootdir)/applications/$(FILENAME_DESKTOP_CLIENT).desktop
++	$(INSTALL_DATA) misc/logos/org.xonotic.Xonotic.metainfo.xml $(DESTDIR)$(datarootdir)/metainfo/org.xonotic.Xonotic.metainfo.xml
++	sed -i 's/Icon=xonotic/Icon=$(FILENAME_ICON_CLIENT)/' $(DESTDIR)$(datarootdir)/applications/$(FILENAME_DESKTOP_CLIENT).desktop
++	sed -i 's/<launchable type=\"desktop-id\">xonotic.desktop<\/launchable>/<launchable type=\"desktop-id\">$(FILENAME_DESKTOP_CLIENT).desktop<\/launchable>/' $(DESTDIR)$(datarootdir)/metainfo/org.xonotic.Xonotic.metainfo.xml
++
++.PHONY: install-desktop-server
++install-desktop-server: # TODO https://gitlab.com/xonotic/xonotic/-/issues/216
++
++.PHONY: install-doc-client
++install-doc-client:
++	$(INSTALL) -d $(DESTDIR)$(docdir)
++	cp -R Docs/* $(DESTDIR)$(docdir)/
++
++.PHONY: install-doc-server
++install-doc-server:
++	$(INSTALL) -d $(DESTDIR)$(docdir)
++	cp -R server $(DESTDIR)$(docdir)/
+diff --git a/misc/logos/org.xonotic.Xonotic.metainfo.xml b/misc/logos/org.xonotic.Xonotic.metainfo.xml
+new file mode 100644
+index 0000000..35fcb54
+--- /dev/null
++++ b/misc/logos/org.xonotic.Xonotic.metainfo.xml
+@@ -0,0 +1,106 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<component type="desktop-application">
++  <id>org.xonotic.Xonotic</id>
++  <project_license>GPL-3.0-or-later</project_license>
++  <metadata_license>CC0-1.0</metadata_license>
++  <provides>
++    <binary>xonotic-sdl</binary>
++  </provides>
++  <launchable type="desktop-id">xonotic.desktop</launchable>
++  <name>Xonotic</name>
++  <developer id="org.xonotic">
++    <name>Team Xonotic</name>
++  </developer>
++  <summary>Multiplayer, deathmatch oriented first person shooter</summary>
++  <summary xml:lang="de">Deathmatch- und Mehrspieler-orientierter Ego-Shooter</summary>
++  <summary xml:lang="fr">Jeu de tir à la première personne multijoueur</summary>
++  <description>
++    <p>
++      Xonotic is a free and fast-paced first person shooter which combines
++      addictive, arena-style gameplay with rapid movement and a wide array of
++      weapons.
++    </p>
++    <p xml:lang="de">
++      Xonotic ist ein freier und schneller Ego-Shooter, der ein
++      Gameplay im Arenastil mit hektischen Manövern und einer großen Auswahl
++      an Waffen kombiniert.
++    </p>
++    <p xml:lang="fr">
++      Xonotic est un jeu de tir à la première personne gratuit, qui combine un
++      style de jeu en arène rapide et addictif avec une large sélection d'armes.
++    </p>
++    <p>
++      Xonotic is easy to learn, but hard to master! Besides thrilling action for
++      the casual player, the game also provides e-sport opportunities for those
++      interested in its competitive aspects.
++      From mapping contests and monthly quick cups to sponsored tournaments,
++      Xonotic allows every e-sport enthusiast to participate in competitions
++      hosted by its open-minded community.
++    </p>
++    <p xml:lang="de">
++      Xonotic ist leicht zu erlernen, aber schwer zu meistern. Neben einer
++      aufregenden Action für den Gelegenheitsspieler bietet das Spiel außerdem
++      Möglichkeiten für den E-Sport für alle, die an Wettkämpfen Spaß haben.
++      Von Kartengestaltungswettbewerben über monatlichen Schnellwettbewerben
++      bis zu gesponsorten Turnieren ermöglicht Xonotic jedem E-Sport-Liebhaber
++      eine Teilnahme in Wettbewerben, die von der aufgeschlossenen Gemeinschaft
++      veranstaltet werden.
++    </p>
++    <p xml:lang="fr">
++      Xonotic est facile à apprendre, mais difficile à maîtriser ! Outre une
++      action intense pour les joueurs débutants, le jeu propose aussi des
++      opportunités e-sport pour ceux qui sont intéressés par l'aspect
++      compétitif.
++    </p>
++    <p>
++      Features such as simple items, fully customizable configs and servers, a
++      functioning anticheat system, the spectator mode, and the opportunity to
++      watch and record games makes Xonotic attractive to competitive players.
++    </p>
++    <p xml:lang="de">
++      Features wie z.B. einfache Gegenstände, vollständig anpassbare
++      Einstellungen und Server, ein funktionierendes Anti-Cheat-System,
++      der Zuschauermodus, und die Möglichkeit, Spielen zuzusehen und
++      sie aufzuzeichnen, machen Xonotic interessant für wetteifernde Spieler.
++    </p>
++    <p xml:lang="fr">
++      Des fonctionnalités comme les items à apparence simplifiée, des
++      configurations et serveurs entièrement personnalisables, un système
++      anti-triche, un mode spectateur, ainsi que la possibilité d'enregistrer et
++      visionner des démos rendent Xonotic attrayant pour les joueurs
++      compétitifs.
++    </p>
++  </description>
++  <url type="bugtracker">https://gitlab.com/groups/xonotic/-/issues</url>
++  <url type="homepage">https://xonotic.org</url>
++  <url type="contact">https://xonotic.org/chat/</url>
++  <url type="faq">https://gitlab.com/xonotic/xonotic#documentation</url>
++  <url type="translate">https://gitlab.com/xonotic/xonotic/-/wikis/home#translating</url>
++  <url type="contribute">https://gitlab.com/xonotic/xonotic#developing</url>
++  <url type="vcs-browser">https://gitlab.com/xonotic</url>
++  <screenshots>
++    <screenshot type="default"><image>https://xonotic.org/m/uploads/2012/07/frontpage_005.jpg</image></screenshot>
++    <screenshot><image>https://xonotic.org/m/uploads/2012/07/frontpage_006.jpg</image></screenshot>
++    <screenshot><image>https://xonotic.org/m/uploads/2012/07/frontpage_007.jpg</image></screenshot>
++    <screenshot><image>https://xonotic.org/m/uploads/2012/07/frontpage_008.jpg</image></screenshot>
++    <screenshot><image>https://xonotic.org/m/uploads/2012/07/frontpage_003.jpg</image></screenshot>
++  </screenshots>
++  <content_rating type="oars-1.1">
++    <content_attribute id="violence-fantasy">moderate</content_attribute>
++    <content_attribute id="violence-bloodshed">mild</content_attribute>
++    <content_attribute id="social-chat">intense</content_attribute>
++  </content_rating>
++  <releases>
++    <release version="0.8.6" date="2023-06-20">
++      <description>
++        <p>
++          This release should have been nerfed by the balance council because there’s a lot here for a point version.
++          Two maps popular for years have been polished up and included. There’s new gametypes and moderation features, new bot capabilities, new HUD and interface features, quality of life and customisation features for players and server admins, XonStat upgrades, and as usual more fixes and optimisations than you can swing a shotgun at.
++        </p>
++      </description>
++      <url type="details">https://xonotic.org/posts/2023/xonotic-0-8-6-release/</url>
++    </release>
++    <release version="0.8.5" date="2022-06-30"/>
++    <release version="0.8.2" date="2017-04-01"/>
++  </releases>
++</component>
+diff --git a/misc/logos/xonotic.desktop b/misc/logos/xonotic.desktop
+index f1af0da..fbfcd22 100644
+--- a/misc/logos/xonotic.desktop
++++ b/misc/logos/xonotic.desktop
+@@ -6,8 +6,33 @@ Comment=Multiplayer, deathmatch oriented first person shooter
+ Comment[de]=Deathmatch- und Mehrspieler-orientierter Ego-Shooter
+ Comment[fr]=Jeu de tir à la première personne multijoueur
+ Icon=xonotic
++
++# Note to packagers and/or .desktop file installers:
++#
++# Xonotic by default expects basedir's root to be the PWD which can lead to
++# issues when calling the engine directly without xonotic-linux-sdl.sh
++#
++# Options:
++# 1)
++#   Create a symlink from PATH binaries to the location of xonotic-linux-sdl.sh
++#   This relies on xonotic-linux-sdl.sh changing PWD to where Xonotic is
++# 2)
++#   Opt into the absolute path Exec and fix its path
++#   This also relies on xonotic-linux-sdl.sh changing PWD to where Xonotic is
++# 3)
++#   Recompile Xonotic with DP_FS_BASEDIR=/path/to/xonotic/ , for example
++#   with DP_FS_BASEDIR=/usr/share/xonotic/ it's no longer necessary
++#   to change your PWD and xonotic-sdl can be anywhere in PATH .
++#   Downstream packages are expected to use this option, supported in the Makefile,
++#   see: https://gitlab.com/xonotic/xonotic/-/wikis/Compiling
++# 4)
++#   DIY your own wrapper script with "-basedir" "/path/to/Xonotic" arguments
++#   or just place the arguments in this file
++#
++#Exec=/absolute/path/to/xonotic-linux-sdl.sh
+ Exec=xonotic-sdl
++
+ Terminal=false
+ PrefersNonDefaultGPU=true
+ StartupNotify=false
+-Categories=Game;ActionGame;
++Categories=Game;ActionGame;Shooter;
