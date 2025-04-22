@@ -17,7 +17,6 @@
     "modules": [
         {
             "name": "xonotic",
-            /* See: https://gitlab.com/xonotic/xonotic/-/wikis/Compiling */
             "buildsystem": "simple",
             "build-options": {
                 "env": {
@@ -42,9 +41,7 @@
                 },
                 {
                     "type": "patch",
-                    /* RELEASE TODO: for 0.9 this patch should be removed as the updates will be in the zip, see MRs: */
-                    /* https://gitlab.com/xonotic/xonotic/-/merge_requests/124 */
-                    /* https://gitlab.com/xonotic/xonotic/-/merge_requests/125 */
+                    /* RELEASE TODO: for 0.9 this patch should be removed as the updates will be in the zip */
                     "path": "xonotic2.patch"
                 }
             ],
