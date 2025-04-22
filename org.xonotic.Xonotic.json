@@ -21,7 +21,7 @@
             "build-options": {
                 "env": {
                     "prefix": "/app", /* this and several other GNU make standard directory variables are supported */
-                    "BASEDIR": "/app/share/xonotic", /* eliminates $PATH symlinks by telling engine where data/*.pk3 is */
+                    "BASEDIR": "/app/share/xonotic", /* eliminates $PATH symlinks by telling engine where data *.pk3 is */
                     "FILENAME_DESKTOP_CLIENT": "org.xonotic.Xonotic", /* flathub requires desktop and icon files be renamed */
                     "FILENAME_ICON_CLIENT": "org.xonotic.Xonotic", /* no file extensions here! */
                     "CFLAGS": "", /* disables -march=native (all other optimisations enabled by default as in upstream builds) */
