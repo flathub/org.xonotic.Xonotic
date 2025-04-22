@@ -15,9 +15,9 @@
     ],
     "command": "xonotic-sdl",
     "modules": [
-        /* See: https://gitlab.com/xonotic/xonotic/-/wikis/Compiling */
         {
             "name": "xonotic",
+            /* See: https://gitlab.com/xonotic/xonotic/-/wikis/Compiling */
             "buildsystem": "simple",
             "build-options": {
                 "env": {
@@ -40,11 +40,11 @@
                     "url": "https://dl.xonotic.org/xonotic-0.8.6.zip",
                     "sha512": "cb39879e96f19abb2877588c2d50c5d3e64dd68153bec3dd1bebedf4d765e506afa419c28381d7005aed664cb1a042571c132b5b319e4308cab67745d996c2a6"
                 },
-                /* RELEASE TODO: for 0.9 this patch should be removed as the updates will be in the zip, see MRs: */
-                /* https://gitlab.com/xonotic/xonotic/-/merge_requests/124 */
-                /* https://gitlab.com/xonotic/xonotic/-/merge_requests/125 */
                 {
                     "type": "patch",
+                    /* RELEASE TODO: for 0.9 this patch should be removed as the updates will be in the zip, see MRs: */
+                    /* https://gitlab.com/xonotic/xonotic/-/merge_requests/124 */
+                    /* https://gitlab.com/xonotic/xonotic/-/merge_requests/125 */
                     "path": "xonotic2.patch"
                 }
             ],
