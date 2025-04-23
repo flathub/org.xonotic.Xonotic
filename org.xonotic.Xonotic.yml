@@ -36,6 +36,6 @@ modules:
       # https://gitlab.com/xonotic/xonotic/-/merge_requests/124
       # https://gitlab.com/xonotic/xonotic/-/merge_requests/125
       - type: patch
-        path: xonotic2.patch
+        path: xonotic.patch
     build-commands:
       - make all install
