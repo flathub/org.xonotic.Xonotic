@@ -1,6 +1,6 @@
-app-id: org.xonotic.Xonotic
+id: org.xonotic.Xonotic
 runtime: org.freedesktop.Platform
-runtime-version: '24.08'
+runtime-version: '25.08'
 sdk: org.freedesktop.Sdk
 finish-args:
   - --device=all
@@ -21,8 +21,9 @@ modules:
         BASEDIR: /app/share/xonotic # eliminates $PATH symlinks by telling engine where data/*.pk3 is
         FILENAME_DESKTOP_CLIENT: org.xonotic.Xonotic # flathub requires desktop and icon files be renamed
         FILENAME_ICON_CLIENT: org.xonotic.Xonotic # no file extensions here!
-        CFLAGS: '' # disables -march=native (all other optimisations enabled by default as in upstream builds)
-        RANLIB: gcc-ranlib # fixes LTO build on Freedesktop SDK 24.08 ?not needed on debian, gentoo, etc?
+        CFLAGS: '-std=gnu17' # disables -march=native (all other optimisations enabled by default as in upstream builds)
+        # -std=gnu17 can be removed when 0.9 is released, it was used to fix version 0.8.6 failing to build on runtime 25.08+
+        RANLIB: gcc-ranlib # fixes LTO build on Freedesktop SDK 25.08 ?not needed on debian, gentoo, etc?
         # legacy engine requires following kludges to build with current Makefile, RELEASE TODO: remove for 0.9
         DP_LINK_CRYPTO: foo
         CFLAGS_CRYPTO: -DLINK_TO_CRYPTO
